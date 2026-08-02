@@ -4,48 +4,54 @@ OKGIP is an end-to-end enterprise platform designed to identify, visualize, and 
 
 ## 📁 Repository Structure
 
-```
-OKGIP/
+OKGIP-updated/
 │
-├── frontend/                         # React 19 + Vite + Tailwind CSS
-│   ├── src/
-│   │   ├── assets/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── services/
-│   │   ├── context/
-│   │   ├── types.ts
-│   │   ├── App.tsx
-│   │   └── main.tsx
-│   ├── package.json
-│   └── vite.config.ts
+├── backend/                          ← Express/Node API (what your `npm run dev`/`start` actually runs)
+│   ├── config/
+│   │   ├── ca.pem                    ← Aiven CA cert (git-ignored via *.pem)
+│   │   ├── db.ts                     ← in-memory mock database
+│   │   └── mysqlDb.ts                ← real Aiven MySQL connection
+│   ├── controllers/                  ← 18 controllers (employee, auth, task, leave, etc.)
+│   ├── middleware/
+│   │   └── auth.ts
+│   └── routes/                       ← 18 route files, one per controller
 │
-├── springboot-backend/               # Spring Boot 3.2 (Java 17)
-│   ├── src/
-│   │   └── main/
-│   │       ├── java/com/okgip/
-│   │       │   ├── controller/
-│   │       │   ├── dto/
-│   │       │   ├── entity/
-│   │       │   ├── repository/
-│   │       │   ├── config/
-│   │       │   └── OkgipApplication.java
-│   │       └── resources/
-│   │           └── application.yml
+├── src/                              ← React 19 + Vite frontend
+│   ├── components/                   ← Navbar, Sidebar, Modal, Toast, AiChatWidget, Breadcrumb
+│   ├── context/                      ← Auth, Language, Theme contexts
+│   ├── layouts/
+│   │   └── DashboardLayout.tsx
+│   ├── pages/                        ← 20 pages (Dashboard, Login, EmployeeManagement, etc.)
+│   ├── routes/
+│   │   └── AppRoutes.tsx
+│   ├── services/
+│   │   └── api.ts
+│   ├── types.ts
+│   ├── App.tsx
+│   ├── main.tsx
+│   └── index.css
+│
+├── springboot-backend/               ← separate Java 17 / Spring Boot 3.2 backend (alternative to backend/)
 │   ├── pom.xml
-│   └── README.md
+│   └── src/main/java/com/okgip/
+│       ├── config/, controller/, dto/, entity/, repository/
+│       └── OkgipApplication.java
 │
-├── database/                         # Database Scripts
-│   ├── okgip.sql
+├── database/                         ← SQL schema/seed files
+│   ├── aiven_okgip_db.sql
 │   ├── schema.sql
 │   └── seed-data.sql
 │
-├── docs/                             # Documentation
+├── docs/
 │   └── API_Documentation.md
 │
-├── .gitignore
-└── README.md
-```
+├── build-server.mjs                  ← bundles server.ts → dist/server.cjs (the file we just discussed)
+├── server.ts                         ← Express entry point, serves both API + Vite/React frontend
+├── vite.config.ts
+├── index.html
+├── package.json
+├── tsconfig.json
+└── .env.example
 
 ## 📊 Database Architecture (`okgip_db`)
 
