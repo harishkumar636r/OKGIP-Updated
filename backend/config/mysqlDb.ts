@@ -2,23 +2,20 @@ import mysql from 'mysql2';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
 dotenv.config();
-
-// ESM has no __dirname — derive it from import.meta.url instead.
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 let isConnected = false;
 
 const isAiven = process.env.DB_SSL === 'true' || (process.env.DB_HOST && process.env.DB_HOST.includes('aivencloud.com'));
 
-// Resolve CA certificate path. Defaults to backend/config/ca.pem if present,
-// or can be overridden via DB_SSL_CA in .env (absolute or relative path).
+// Resolve CA certificate path relative to the project root (process.cwd()).
+// Using process.cwd() instead of import.meta.url/__dirname keeps this working
+// both in dev (tsx, real ESM) and in the production build (esbuild bundles
+// this to CJS, where import.meta.url is empty and __dirname doesn't exist).
 const caPath = process.env.DB_SSL_CA
   ? path.resolve(process.cwd(), process.env.DB_SSL_CA)
-  : path.resolve(__dirname, 'ca.pem');
+  : path.resolve(process.cwd(), 'backend/config/ca.pem');
 
 let sslConfig: any = undefined;
 if (isAiven) {
