@@ -1,0 +1,40 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: okgip-backend
+
+  # Database Configuration (Defaults to H2 in-memory for testing, configurable for MySQL or PostgreSQL)
+  # For MySQL set:
+  #   SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/okgip_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+  #   SPRING_DATASOURCE_DRIVER=com.mysql.cj.jdbc.Driver
+  #   SPRING_DATASOURCE_USERNAME=root
+  #   SPRING_DATASOURCE_PASSWORD=your_mysql_password
+  #   SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:mem:okgipdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER:org.h2.Driver}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    database-platform: ${SPRING_JPA_DATABASE_PLATFORM:org.hibernate.dialect.H2Dialect}
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+okgip:
+  app:
+    jwtSecret: OKGIPSecureJWTSecretKeyForProductionAndDevelopment9876543210
+    jwtExpirationMs: 86400000
