@@ -49,10 +49,12 @@ The database runs on **MySQL (Aiven Cloud or local MySQL server)** and includes 
 - `ai_recommendations`
 - `audit_logs`
 
+# 📂 Project Structure
+
+```text
 OKGIP-Updated
 │
 ├── springboot-backend/
-│   │
 │   ├── src/main/java/com/okgip/
 │   │   ├── config/
 │   │   ├── controller/
@@ -62,21 +64,20 @@ OKGIP-Updated
 │   │   ├── dto/
 │   │   ├── security/
 │   │   └── OkgipApplication.java
-│   │
 │   ├── src/main/resources/
 │   │   └── application.yml
-│   │
 │   └── pom.xml
 │
 ├── src/
 │   ├── components/
-│   ├── pages/
-│   ├── layouts/
-│   ├── routes/
 │   ├── context/
+│   ├── layouts/
+│   ├── pages/
+│   ├── routes/
 │   ├── services/
 │   ├── App.tsx
-│   └── main.tsx
+│   ├── main.tsx
+│   └── index.css
 │
 ├── database/
 │   ├── schema.sql
@@ -89,14 +90,83 @@ OKGIP-Updated
 ├── package.json
 ├── vite.config.ts
 ├── tsconfig.json
-└── README.md
-
+├── README.md
+└── .env.example
+```
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: React 19, Vite, Tailwind CSS, Lucide Icons, Recharts, Multi-language context (English, Tamil, Hindi, Spanish, French, German, Chinese)
-- **Backend**: Java 17, Spring Boot 3.2.3, Spring Data JPA, Hibernate, JWT Security, Lombok, Maven
-- **Database**: MySQL 8.0 (Aiven Cloud supported), H2 (Local memory option)
+### Frontend
+- React 19
+- TypeScript
+- Vite
+- React Router
+- Axios
+- CSS
+
+### Backend
+- Spring Boot 3
+- Spring Security
+- Spring Data JPA
+- JWT Authentication
+
+### Database
+- Aiven MySQL (Cloud)
+
+### Deployment
+- Render
+
+## 🏗️ Architecture
+
+```text
+React Frontend
+      │
+      ▼
+Spring Boot REST API
+      │
+      ▼
+Spring Security + JWT
+      │
+      ▼
+Spring Data JPA
+      │
+      ▼
+Aiven MySQL Database
+```
+
+## 📋 Features
+
+- User Authentication (JWT)
+- Role-Based Login (Admin, Manager, Employee)
+- Employee Management
+- Department Management
+- Skill Management
+- Knowledge Gap Analysis
+- Training Management
+- Reports & Analytics
+- Notifications
+- AI-Based Recommendations
+
+## 🗄️ Database Tables
+
+- users
+- employees
+- departments
+- skills
+- employee_skills
+- knowledge_gaps
+- training_programs
+- training_assignments
+- notifications
+
+## 🚀 Live Demo
+
+https://okgip-updated.onrender.com/
+
+## 💻 GitHub Repository
+
+https://github.com/harishkumar636r/OKGIP-Updated
+
 
 ## 🌐 Multi-Language Support
 Supported languages in the application interface:
@@ -108,7 +178,6 @@ Supported languages in the application interface:
 - Deutsch (German)
 - 中文 (Chinese)
 
-## 🚀 Getting Started
 
 ### 1. Spring Boot Backend
 ```bash
