@@ -2,14 +2,6 @@
 
 OKGIP is an end-to-end enterprise platform designed to identify, visualize, and bridge skill gaps within organizations using AI analytics, interactive dashboards, and real-time learning management.
 
-## Project Links
-
-### GitHub Repository
-https://github.com/harishkumar636r/OKGIP-Updated
-
-### Live Demo
-https://okgip-updated.onrender.com/
-
 ### Technologies Used
 - React 19
 - Vite
@@ -170,19 +162,6 @@ Supported languages in the application interface:
 - Français (French)
 - Deutsch (German)
 - 中文 (Chinese)
-
-
-### 1. Spring Boot Backend
-```bash
-cd springboot-backend
-mvn clean package
-mvn spring-boot:run
-```
-
-### 2. Frontend Application
-```bash
-npm install
-npm run dev
 
 
 ## 🚀 Live Demo
