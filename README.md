@@ -159,13 +159,6 @@ Aiven MySQL Database
 - training_assignments
 - notifications
 
-## 🚀 Live Demo
-
-https://okgip-updated.onrender.com/
-
-## 💻 GitHub Repository
-
-https://github.com/harishkumar636r/OKGIP-Updated
 
 
 ## 🌐 Multi-Language Support
@@ -190,5 +183,14 @@ mvn spring-boot:run
 ```bash
 npm install
 npm run dev
+
+
+## 🚀 Live Demo
+
+https://okgip-updated.onrender.com/
+
+## 💻 GitHub Repository
+
+https://github.com/harishkumar636r/OKGIP-Updated
 ```
 The application runs locally on `http://localhost:3000`.
