@@ -49,6 +49,49 @@ The database runs on **MySQL (Aiven Cloud or local MySQL server)** and includes 
 - `ai_recommendations`
 - `audit_logs`
 
+OKGIP-Updated
+│
+├── springboot-backend/
+│   │
+│   ├── src/main/java/com/okgip/
+│   │   ├── config/
+│   │   ├── controller/
+│   │   ├── service/
+│   │   ├── repository/
+│   │   ├── entity/
+│   │   ├── dto/
+│   │   ├── security/
+│   │   └── OkgipApplication.java
+│   │
+│   ├── src/main/resources/
+│   │   └── application.yml
+│   │
+│   └── pom.xml
+│
+├── src/
+│   ├── components/
+│   ├── pages/
+│   ├── layouts/
+│   ├── routes/
+│   ├── context/
+│   ├── services/
+│   ├── App.tsx
+│   └── main.tsx
+│
+├── database/
+│   ├── schema.sql
+│   ├── seed-data.sql
+│   └── aiven_okgip_db.sql
+│
+├── docs/
+│   └── API_Documentation.md
+│
+├── package.json
+├── vite.config.ts
+├── tsconfig.json
+└── README.md
+
+
 ## 🛠️ Tech Stack
 
 - **Frontend**: React 19, Vite, Tailwind CSS, Lucide Icons, Recharts, Multi-language context (English, Tamil, Hindi, Spanish, French, German, Chinese)
