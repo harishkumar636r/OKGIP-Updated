@@ -1,9 +1,37 @@
 import { Response } from 'express';
 import { db } from '../config/db';
+import { queryAsync } from '../config/mysqlDb';
 import { AuthRequest } from '../middleware/auth';
+
+// Persists the current in-memory gap analysis snapshot to MySQL so results
+// are durable and queryable outside this Node process too (Task 1:
+// "Store the gap analysis results in the database"). This is best-effort —
+// queryAsync() resolves to null instead of throwing if MySQL is
+// unavailable, so this never breaks the API response if the DB is down.
+const persistGapSnapshot = async () => {
+  for (const g of db.knowledgeGaps) {
+    await queryAsync(
+      `INSERT INTO knowledge_gaps (id, employee_id, skill_id, current_level, required_level, priority, status, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE current_level = VALUES(current_level), required_level = VALUES(required_level),
+         priority = VALUES(priority), status = VALUES(status)`,
+      [
+        g.id,
+        g.employee_id,
+        g.skill_id,
+        g.current_proficiency,
+        g.required_proficiency,
+        g.priority.toUpperCase(),
+        g.status === 'In Training' ? 'IN_TRAINING' : g.status === 'Resolved' ? 'RESOLVED' : 'IDENTIFIED',
+        g.created_at,
+      ]
+    );
+  }
+};
 
 export const getKnowledgeGaps = (req: AuthRequest, res: Response) => {
   db.recalculateAllGaps();
+  persistGapSnapshot().catch(() => {}); // fire-and-forget, never blocks the response
 
   let gaps = db.knowledgeGaps.map(g => {
     const emp = db.employees.find(e => e.id === g.employee_id);
@@ -121,6 +149,59 @@ export const getGapAnalytics = (req: AuthRequest, res: Response) => {
       },
       departmentBreakdown,
       skillDeficiencies,
+    },
+  });
+};
+
+// Task 2 data source: employee x skill severity matrix for the heatmap
+// visualization. Each cell reports the deficit (0 = no gap) and a
+// severity bucket the frontend maps directly to a color.
+export const getGapHeatmap = (req: AuthRequest, res: Response) => {
+  db.recalculateAllGaps();
+
+  const { departmentId } = req.query;
+  let employees = db.employees.filter(e => e.status === 'Active');
+  if (departmentId) {
+    employees = employees.filter(e => e.department_id === Number(departmentId));
+  }
+
+  // Only include skills that are actually required somewhere, so the
+  // heatmap doesn't show empty columns for irrelevant skills.
+  const requiredSkillIds = Array.from(new Set(db.departmentRequiredSkills.map(r => r.skill_id)));
+  const skills = db.skills.filter(s => requiredSkillIds.includes(s.id));
+
+  const matrix = employees.map(emp => {
+    const dept = db.departments.find(d => d.id === emp.department_id);
+    const cells = skills.map(skill => {
+      const gap = db.knowledgeGaps.find(g => g.employee_id === emp.id && g.skill_id === skill.id);
+      const deficit = gap ? gap.gap_score : 0;
+      let severity: 'none' | 'low' | 'medium' | 'high' = 'none';
+      if (deficit >= 2) severity = 'high';
+      else if (deficit === 1) severity = 'medium';
+      else if (gap) severity = 'low';
+
+      return {
+        skillId: skill.id,
+        skillName: skill.name,
+        deficit,
+        severity,
+        status: gap ? gap.status : 'Resolved',
+      };
+    });
+
+    return {
+      employeeId: emp.id,
+      employeeName: `${emp.first_name} ${emp.last_name}`,
+      departmentName: dept ? dept.name : 'Unassigned',
+      cells,
+    };
+  });
+
+  return res.json({
+    success: true,
+    data: {
+      skills: skills.map(s => ({ id: s.id, name: s.name, category: s.category })),
+      employees: matrix,
     },
   });
 };

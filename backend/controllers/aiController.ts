@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { GoogleGenAI } from '@google/genai';
 import { db } from '../config/db';
+import { AuthRequest } from '../middleware/auth';
+import { getExternalCourses } from '../services/externalCourseService';
 
 const getAiClient = () => {
   if (process.env.GEMINI_API_KEY) {
@@ -67,6 +69,113 @@ export const getAiRecommendations = async (req: Request, res: Response) => {
     });
 
     res.json({ success: true, data: recommendations });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// 1b. Personalized AI Recommendation for a single employee — this is the
+// one that actually calls the Gemini LLM with the employee's real gap
+// data (Task 3: "Integrate AI/LLM for Recommendations"), and folds in
+// missing skills, priority, role, and current proficiency into the
+// prompt and the fallback logic (Task 6: "Implement Recommendation Logic").
+export const getPersonalizedRecommendation = async (req: Request, res: Response) => {
+  try {
+    const employeeId = Number(req.params.employeeId);
+    const emp = db.employees.find(e => e.id === employeeId);
+    if (!emp) {
+      return res.status(404).json({ success: false, message: 'Employee not found' });
+    }
+
+    db.recalculateAllGaps();
+
+    const gaps = db.knowledgeGaps
+      .filter(g => g.employee_id === employeeId && g.status !== 'Resolved')
+      .sort((a, b) => {
+        const weight = { High: 3, Medium: 2, Low: 1 };
+        return weight[b.priority] - weight[a.priority] || b.gap_score - a.gap_score;
+      })
+      .slice(0, 5); // focus on the top 5 most urgent gaps
+
+    const gapContext = await Promise.all(
+      gaps.map(async (g) => {
+        const skill = db.skills.find(s => s.id === g.skill_id);
+        const skillName = skill?.name || 'Unknown Skill';
+        const internalProgram = db.trainingPrograms.find(
+          tp => tp.target_skill_id === g.skill_id && tp.status === 'Active'
+        );
+        const externalCourses = await getExternalCourses(skillName);
+        return {
+          skillName,
+          category: skill?.category || 'Technical',
+          currentProficiency: g.current_proficiency,
+          requiredProficiency: g.required_proficiency,
+          gapScore: g.gap_score,
+          priority: g.priority,
+          internalProgram: internalProgram
+            ? { title: internalProgram.title, provider: internalProgram.provider, durationHours: internalProgram.duration_hours }
+            : null,
+          externalCourses: externalCourses.slice(0, 2), // top 2 options per skill
+        };
+      })
+    );
+
+    // Rule-based fallback: works with zero API key, and is also what we
+    // fall back to if the Gemini call fails for any reason.
+    const buildFallback = () => ({
+      summary: `${emp.first_name} ${emp.last_name} (${emp.designation}) has ${gaps.length} active skill gap${gaps.length === 1 ? '' : 's'}. Recommendations are prioritized by gap severity and role relevance.`,
+      recommendations: gapContext.map((g) => {
+        const best = g.internalProgram
+          ? { title: g.internalProgram.title, provider: g.internalProgram.provider, source: 'Internal' as const }
+          : g.externalCourses[0]
+            ? { title: g.externalCourses[0].title, provider: g.externalCourses[0].provider, source: 'External' as const }
+            : { title: `${g.skillName} Upskilling`, provider: 'OKGIP Learning Hub', source: 'Internal' as const };
+
+        return {
+          skillName: g.skillName,
+          priority: g.priority,
+          suggestedCourse: best.title,
+          provider: best.provider,
+          source: best.source,
+          rationale: `${emp.designation} needs ${g.skillName} at proficiency ${g.requiredProficiency}, currently at ${g.currentProficiency} (${g.priority.toLowerCase()} priority gap).`,
+        };
+      }),
+    });
+
+    const ai = getAiClient();
+    if (!ai || gapContext.length === 0) {
+      return res.json({ success: true, aiGenerated: false, data: buildFallback() });
+    }
+
+    try {
+      const prompt = `You are an enterprise learning & development advisor for OKGIP.
+Employee: ${emp.first_name} ${emp.last_name}, role: ${emp.designation}.
+Their skill gaps (most urgent first), with available internal training and external course options for each:
+${JSON.stringify(gapContext, null, 2)}
+
+Based on the employee's role, current proficiency, required proficiency, and gap priority, write personalized training recommendations.
+Respond with ONLY valid JSON (no markdown fences, no commentary) in exactly this shape:
+{
+  "summary": "1-2 sentence overview of this employee's development priorities",
+  "recommendations": [
+    { "skillName": string, "priority": "High"|"Medium"|"Low", "suggestedCourse": string, "provider": string, "source": "Internal"|"External", "rationale": "1 sentence, specific to this employee's role and gap" }
+  ]
+}
+Pick the single best course per skill from the options given (prefer Internal when it exists and its level fits, otherwise pick the best-fitting External course). Do not invent courses that aren't in the data above.`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.6-flash',
+        contents: prompt,
+      });
+
+      const raw = (response.text || '').trim().replace(/^```json\s*|\s*```$/g, '');
+      const parsed = JSON.parse(raw);
+
+      return res.json({ success: true, aiGenerated: true, data: parsed });
+    } catch (err) {
+      console.error('Gemini personalized recommendation failed, using rule-based fallback:', err);
+      return res.json({ success: true, aiGenerated: false, data: buildFallback() });
+    }
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
   }

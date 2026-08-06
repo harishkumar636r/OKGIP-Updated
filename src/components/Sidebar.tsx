@@ -19,7 +19,8 @@ import {
   CheckSquare,
   FileCheck,
   Medal,
-  ShieldAlert
+  ShieldAlert,
+  Map
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -75,6 +76,13 @@ export const Sidebar: React.FC = () => {
       icon: Sparkles,
       roles: ['Admin', 'Manager', 'Employee'],
       badge: 'AI',
+    },
+    {
+      title: 'Learning Path', // TODO: add a 'learning_path' key to LanguageContext for full i18n support like the other nav items
+      path: '/learning-path',
+      icon: Map,
+      roles: ['Admin', 'Manager', 'Employee'],
+      badge: 'New',
     },
     {
       title: t('training'),

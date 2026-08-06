@@ -18,6 +18,7 @@ import { Settings } from '../pages/Settings';
 import { Profile } from '../pages/Profile';
 import { AccessDenied } from '../pages/AccessDenied';
 import { AiRecommendations } from '../pages/AiRecommendations';
+import { LearningPath } from '../pages/LearningPath';
 import { Leaderboard } from '../pages/Leaderboard';
 import { Messaging } from '../pages/Messaging';
 import { LeaveManagement } from '../pages/LeaveManagement';
@@ -97,6 +98,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="skills" element={<SkillsManagement />} />
         <Route path="gaps" element={<KnowledgeGapModule />} />
         <Route path="ai-recommendations" element={<AiRecommendations />} />
+        <Route path="learning-path" element={<LearningPath />} />
         <Route path="training" element={<TrainingModule />} />
         <Route path="assessments" element={<Assessments />} />
         <Route path="leaderboard" element={<Leaderboard />} />

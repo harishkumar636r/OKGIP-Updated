@@ -15,6 +15,7 @@ import {
 import api from '../services/api';
 import { KnowledgeGap, Department } from '../types';
 import { Toast, ToastMessage } from '../components/Toast';
+import { SkillGapHeatmap } from '../components/SkillGapHeatmap';
 
 export const KnowledgeGapModule: React.FC = () => {
   const navigate = useNavigate();
@@ -165,6 +166,9 @@ export const KnowledgeGapModule: React.FC = () => {
           </select>
         </div>
       </div>
+
+      {/* Skill Gap Heatmap */}
+      <SkillGapHeatmap />
 
       {/* Gaps List Table */}
       <div className="bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-sm">

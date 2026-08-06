@@ -8,6 +8,7 @@ import employeeRoutes from './backend/routes/employeeRoutes';
 import departmentRoutes from './backend/routes/departmentRoutes';
 import skillRoutes from './backend/routes/skillRoutes';
 import gapRoutes from './backend/routes/gapRoutes';
+import learningPathRoutes from './backend/routes/learningPathRoutes';
 import trainingRoutes from './backend/routes/trainingRoutes';
 import reportRoutes from './backend/routes/reportRoutes';
 import notificationRoutes from './backend/routes/notificationRoutes';
@@ -47,6 +48,7 @@ async function startServer() {
   app.use('/api/departments', departmentRoutes);
   app.use('/api/skills', skillRoutes);
   app.use('/api/gaps', gapRoutes);
+  app.use('/api/learning-paths', learningPathRoutes);
   app.use('/api/trainings', trainingRoutes);
   app.use('/api/reports', reportRoutes);
   app.use('/api/notifications', notificationRoutes);
