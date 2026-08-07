@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { GoogleGenAI } from '@google/genai';
 import { db } from '../config/db';
+import { queryAsync } from '../config/mysqlDb';
 import { AuthRequest } from '../middleware/auth';
 import { getExternalCourses } from '../services/externalCourseService';
 
@@ -245,8 +246,26 @@ export const getPredictiveAnalysis = async (req: Request, res: Response) => {
   }
 };
 
+// Persists each chat exchange to MySQL's audit_logs table (fire-and-forget,
+// same pattern as the gap snapshot persistence — never blocks the reply,
+// never throws if MySQL is unreachable).
+const persistChatLog = (req: AuthRequest, message: string, reply: string) => {
+  queryAsync(
+    `INSERT INTO audit_logs (user_email, action, resource, details, ip_address, created_at)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [
+      req.user?.email || 'unknown',
+      'AI_CHAT',
+      'ai_chat',
+      JSON.stringify({ question: message, reply }),
+      req.ip || null,
+      new Date().toISOString(),
+    ]
+  ).catch(() => {});
+};
+
 // 3. AI Chat Assistant
-export const handleAiChat = async (req: Request, res: Response) => {
+export const handleAiChat = async (req: AuthRequest, res: Response) => {
   try {
     const { message, context } = req.body;
 
@@ -270,6 +289,7 @@ Context:
         });
 
         if (response.text) {
+          persistChatLog(req, message, response.text);
           return res.json({ success: true, reply: response.text });
         }
       } catch (err) {
@@ -298,6 +318,7 @@ Employees can enroll directly from the **Training** page!`;
       reply = `📊 **Reports & Exporting**: You can generate comprehensive PDF, Excel, or CSV reports filtered by Department, Date, Role, or Employee directly from the **Reports & Analytics** module.`;
     }
 
+    persistChatLog(req, message, reply);
     res.json({ success: true, reply });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });

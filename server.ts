@@ -4,6 +4,7 @@ import path from 'path';
 import mysqlDb from './backend/config/mysqlDb';
 
 import authRoutes from './backend/routes/authRoutes';
+import publicRoutes from './backend/routes/publicRoutes';
 import employeeRoutes from './backend/routes/employeeRoutes';
 import departmentRoutes from './backend/routes/departmentRoutes';
 import skillRoutes from './backend/routes/skillRoutes';
@@ -44,6 +45,7 @@ async function startServer() {
 
   // REST API Endpoints
   app.use('/api/auth', authRoutes);
+  app.use('/api/public', publicRoutes);
   app.use('/api/employees', employeeRoutes);
   app.use('/api/departments', departmentRoutes);
   app.use('/api/skills', skillRoutes);

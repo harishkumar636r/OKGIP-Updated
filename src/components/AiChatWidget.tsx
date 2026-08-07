@@ -2,6 +2,71 @@ import React, { useState } from 'react';
 import { Bot, Send, X, Sparkles, User, Loader2 } from 'lucide-react';
 import api from '../services/api';
 
+// The AI (Gemini or the rule-based fallback) returns Markdown-lite text
+// (**bold**, ### headers, * bullets). The chat bubble was rendering that
+// as a raw string, so people literally saw ** characters. This renders
+// the handful of Markdown constructs we actually use into real JSX,
+// without pulling in a full Markdown library.
+function renderInline(text: string, keyPrefix: string): React.ReactNode[] {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={`${keyPrefix}-b-${i}`}>{part.slice(2, -2)}</strong>;
+    }
+    return <React.Fragment key={`${keyPrefix}-t-${i}`}>{part}</React.Fragment>;
+  });
+}
+
+function renderMessage(text: string): React.ReactNode {
+  const lines = text.split('\n');
+  const blocks: React.ReactNode[] = [];
+  let listBuffer: string[] = [];
+
+  const flushList = (key: string) => {
+    if (listBuffer.length === 0) return;
+    blocks.push(
+      <ul key={key} className="list-disc pl-4 space-y-0.5 my-1">
+        {listBuffer.map((item, i) => (
+          <li key={i}>{renderInline(item, `${key}-${i}`)}</li>
+        ))}
+      </ul>
+    );
+    listBuffer = [];
+  };
+
+  lines.forEach((line, idx) => {
+    const trimmed = line.trim();
+
+    if (trimmed.startsWith('### ')) {
+      flushList(`list-${idx}`);
+      blocks.push(
+        <p key={idx} className="font-bold text-slate-900 mt-1.5 first:mt-0">
+          {renderInline(trimmed.slice(4), `h-${idx}`)}
+        </p>
+      );
+    } else if (/^[\*\-]\s+/.test(trimmed)) {
+      listBuffer.push(trimmed.replace(/^[\*\-]\s+/, ''));
+    } else if (/^\d+\.\s+/.test(trimmed)) {
+      listBuffer.push(trimmed.replace(/^\d+\.\s+/, ''));
+    } else if (trimmed === '---') {
+      flushList(`list-${idx}`);
+      blocks.push(<hr key={idx} className="my-1.5 border-slate-200" />);
+    } else if (trimmed === '') {
+      flushList(`list-${idx}`);
+    } else {
+      flushList(`list-${idx}`);
+      blocks.push(
+        <p key={idx} className="leading-relaxed">
+          {renderInline(line, `p-${idx}`)}
+        </p>
+      );
+    }
+  });
+  flushList('list-end');
+
+  return <div className="space-y-0.5">{blocks}</div>;
+}
+
 export const AiChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Array<{ sender: 'bot' | 'user'; text: string; time: string }>>([
@@ -111,7 +176,7 @@ export const AiChatWidget: React.FC = () => {
                       : 'bg-white text-slate-800 border border-slate-200/90 rounded-bl-none shadow-xs'
                   }`}
                 >
-                  <p className="whitespace-pre-wrap leading-relaxed">{m.text}</p>
+                  <div className="whitespace-pre-wrap leading-relaxed">{renderMessage(m.text)}</div>
                   <p
                     className={`text-[9px] mt-1 text-right ${
                       m.sender === 'user' ? 'text-emerald-200' : 'text-slate-400'

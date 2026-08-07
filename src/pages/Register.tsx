@@ -1,22 +1,82 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { BrainCircuit, Mail, Lock, User, Briefcase, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
+import { BrainCircuit, Mail, Lock, User, Briefcase, ArrowRight, ShieldCheck, Sparkles, Eye, EyeOff, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+
+// Regulation item 4: form data must not be lost if the user bounces
+// between Sign In and Sign Up. We persist a draft to sessionStorage
+// (cleared on tab close, and on successful submit) — password is
+// deliberately excluded from the draft for basic security hygiene, the
+// user just re-types that one field.
+const DRAFT_KEY = 'okgip_register_draft';
+
+type RegisterDraft = Omit<typeof initialFormData, 'password'>;
+
+const initialFormData = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  password: '',
+  role: 'Employee',
+  designation: '',
+  departmentId: '1',
+};
+
+function loadDraft(): typeof initialFormData {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_KEY);
+    if (!raw) return initialFormData;
+    const parsed = JSON.parse(raw) as RegisterDraft;
+    return { ...initialFormData, ...parsed, password: '' };
+  } catch {
+    return initialFormData;
+  }
+}
+
+// Regulation item 2: suggest the most relevant department as the user
+// types their designation, instead of leaving it on whatever was last
+// selected (or always defaulting to Software Engineering).
+const DESIGNATION_DEPARTMENT_HINTS: { keywords: string[]; departmentName: string }[] = [
+  { keywords: ['engineer', 'developer', 'programmer', 'sde', 'architect'], departmentName: 'Software Engineering' },
+  { keywords: ['data scientist', 'data analyst', 'ml engineer', 'analytics'], departmentName: 'Data Science & Analytics' },
+  { keywords: ['security', 'cyber', 'compliance', 'audit'], departmentName: 'Cybersecurity & Compliance' },
+  { keywords: ['product manager', 'product owner', 'product'], departmentName: 'Product Management' },
+  { keywords: ['hr', 'human resources', 'recruiter', 'talent'], departmentName: 'Human Resources' },
+  { keywords: ['sales', 'marketing', 'growth', 'account executive'], departmentName: 'Sales & Marketing' },
+  { keywords: ['finance', 'accountant', 'payroll'], departmentName: 'Finance & Accounting' },
+  { keywords: ['customer success', 'support', 'success manager'], departmentName: 'Customer Success' },
+  { keywords: ['designer', 'ux', 'ui', 'design'], departmentName: 'Design & UX' },
+  { keywords: ['operations', 'legal', 'counsel', 'procurement'], departmentName: 'Operations & Legal' },
+];
+
+const TERMS_TEXT = `OKGIP Terms & Conditions (Summary)
+
+1. Acceptance of Terms
+By creating an account, you agree to use the OKGIP platform solely for legitimate organizational skill-tracking, training, and workforce-development purposes.
+
+2. Data You Provide
+Your name, email, designation, and department are stored to build your employee profile, skill matrix, and knowledge-gap analysis. This data is visible to your manager and platform administrators as needed for their role.
+
+3. Account Responsibility
+You are responsible for keeping your login credentials confidential and for all activity under your account.
+
+4. Fair Use
+You agree not to misuse the platform's AI features, attempt unauthorized access to other employees' records, or submit false skill/training data.
+
+5. Changes
+These terms may be updated as the platform evolves; continued use after an update constitutes acceptance of the revised terms.
+
+(This is a summarized version for the OKGIP demo project — replace with your organization's actual legal terms before any real-world use.)`;
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    role: 'Employee',
-    designation: '',
-    departmentId: '1',
-  });
+  const [formData, setFormData] = useState(loadDraft);
+  const [departments, setDepartments] = useState<{ id: number; name: string; code: string }[]>([]);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
   const [agreeTerms, setAgreeTerms] = useState(true);
   const [error, setError] = useState('');
@@ -25,6 +85,38 @@ export const Register: React.FC = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showGoogleModal, setShowGoogleModal] = useState(false);
   const [googleEmailInput, setGoogleEmailInput] = useState('');
+
+  // Load the live department list instead of a hardcoded one, so it
+  // always matches what's actually in the database (Regulation item 2).
+  useEffect(() => {
+    api.get('/public/departments')
+      .then(res => { if (res.data.success) setDepartments(res.data.data); })
+      .catch(() => {
+        // Fall back to a minimal static list if the API call fails for any
+        // reason (e.g. offline) so the form still works.
+        setDepartments([{ id: 1, name: 'Software Engineering', code: 'ENG' }]);
+      });
+  }, []);
+
+  // Persist the draft (minus password) on every change (Regulation item 4).
+  useEffect(() => {
+    const { password, ...draft } = formData;
+    sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  }, [formData]);
+
+  // Auto-suggest a department when the designation text matches a known
+  // keyword (Regulation item 2), but only if the user hasn't manually
+  // picked a department already different from the current match.
+  const handleDesignationChange = (value: string) => {
+    const lower = value.toLowerCase();
+    const match = DESIGNATION_DEPARTMENT_HINTS.find(h => h.keywords.some(k => lower.includes(k)));
+    const matchedDept = match ? departments.find(d => d.name === match.departmentName) : null;
+    setFormData(prev => ({
+      ...prev,
+      designation: value,
+      departmentId: matchedDept ? String(matchedDept.id) : prev.departmentId,
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +130,7 @@ export const Register: React.FC = () => {
     try {
       const res = await api.post('/auth/register', formData);
       if (res.data.success) {
+        sessionStorage.removeItem(DRAFT_KEY);
         login(res.data.token, res.data.user);
         navigate('/dashboard');
       }
@@ -245,14 +338,24 @@ export const Register: React.FC = () => {
 
               <div>
                 <label className="block text-slate-700 font-bold mb-1">Password</label>
-                <input
-                  type="password"
-                  required
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 font-medium"
-                  placeholder="Enter your password"
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-10 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 font-medium"
+                    placeholder="Enter your password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-600 cursor-pointer"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <div>
@@ -261,7 +364,7 @@ export const Register: React.FC = () => {
                   type="text"
                   required
                   value={formData.designation}
-                  onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
+                  onChange={(e) => handleDesignationChange(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 font-medium"
                   placeholder="Software Engineer"
                 />
@@ -287,10 +390,9 @@ export const Register: React.FC = () => {
                     onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-emerald-500 font-medium"
                   >
-                    <option value="1">Software Engineering</option>
-                    <option value="2">Data Science & Analytics</option>
-                    <option value="3">Cybersecurity & Compliance</option>
-                    <option value="4">Product Management</option>
+                    {departments.map(d => (
+                      <option key={d.id} value={String(d.id)}>{d.name}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -305,7 +407,14 @@ export const Register: React.FC = () => {
                     className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-600"
                   />
                   <span className="text-slate-600 text-[11px] font-medium">
-                    By Signing Up, I Agree with <a href="#terms" onClick={(e) => e.preventDefault()} className="text-emerald-600 font-bold hover:underline">Terms & Conditions</a>
+                    By Signing Up, I Agree with{' '}
+                    <button
+                      type="button"
+                      onClick={() => setShowTerms(true)}
+                      className="text-emerald-600 font-bold hover:underline cursor-pointer"
+                    >
+                      Terms & Conditions
+                    </button>
                   </span>
                 </label>
               </div>
@@ -338,6 +447,39 @@ export const Register: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Terms & Conditions Modal — Regulation item 1: this now actually shows content */}
+      {showTerms && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full border border-slate-200 shadow-2xl relative animate-fade-in max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b border-slate-200">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                Terms & Conditions
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowTerms(false)}
+                className="text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-5 overflow-y-auto text-xs text-slate-600 leading-relaxed whitespace-pre-wrap font-medium">
+              {TERMS_TEXT}
+            </div>
+            <div className="p-5 pt-0">
+              <button
+                type="button"
+                onClick={() => { setAgreeTerms(true); setShowTerms(false); }}
+                className="w-full py-2.5 rounded-full bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-500 shadow-md cursor-pointer"
+              >
+                I Understand
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Google Modal */}
       {showGoogleModal && (

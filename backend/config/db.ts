@@ -256,6 +256,17 @@ class OKGIPDatabase {
       { id: 2, name: 'Data Science & Analytics', code: 'DSA', description: 'Machine learning models, business intelligence, and data pipeline management.', head_employee_id: 4, created_at: now, updated_at: now },
       { id: 3, name: 'Cybersecurity & Compliance', code: 'SEC', description: 'Information security, vulnerability management, and ISO compliance.', head_employee_id: 5, created_at: now, updated_at: now },
       { id: 4, name: 'Product Management', code: 'PRD', description: 'Product strategy, customer roadmap, and cross-functional feature planning.', head_employee_id: null, created_at: now, updated_at: now },
+      { id: 5, name: 'Human Resources', code: 'HR', description: 'Talent acquisition, employee relations, and organizational development.', head_employee_id: null, created_at: now, updated_at: now },
+      { id: 6, name: 'Sales & Marketing', code: 'SLM', description: 'Revenue growth, client relationships, brand strategy, and campaigns.', head_employee_id: null, created_at: now, updated_at: now },
+      { id: 7, name: 'Finance & Accounting', code: 'FIN', description: 'Budgeting, financial planning, payroll, and audit compliance.', head_employee_id: null, created_at: now, updated_at: now },
+      { id: 8, name: 'Customer Success', code: 'CSS', description: 'Onboarding, retention, and post-sale customer support.', head_employee_id: null, created_at: now, updated_at: now },
+      { id: 9, name: 'Design & UX', code: 'UXD', description: 'Product design, user research, and interface/experience design.', head_employee_id: null, created_at: now, updated_at: now },
+      { id: 10, name: 'Operations & Legal', code: 'OPL', description: 'Business operations, facilities, procurement, and legal/regulatory affairs.', head_employee_id: null, created_at: now, updated_at: now },
+      { id: 11, name: 'Cloud', code: 'CLD', description: 'Cloud platform engineering, infrastructure automation, and site reliability.', head_employee_id: null, created_at: now, updated_at: now },
+      { id: 12, name: 'Quality Assurance', code: 'QA', description: 'Test strategy, automation frameworks, and release quality gating.', head_employee_id: null, created_at: now, updated_at: now },
+      { id: 13, name: 'Database', code: 'DBA', description: 'Database administration, performance tuning, and data reliability.', head_employee_id: null, created_at: now, updated_at: now },
+      { id: 14, name: 'AI', code: 'AI', description: 'Applied machine learning, NLP, and production AI systems.', head_employee_id: null, created_at: now, updated_at: now },
+      { id: 15, name: 'Infrastructure', code: 'INF', description: 'Network engineering, systems infrastructure, and platform security.', head_employee_id: null, created_at: now, updated_at: now },
     ];
 
     // 3. Employees
@@ -267,6 +278,61 @@ class OKGIPDatabase {
       { id: 5, user_id: 5, first_name: 'David', last_name: 'Kumar', email: 'david.kumar@okgip.org', phone: '+1-800-555-0105', designation: 'Security Audit Lead', department_id: 3, join_date: '2023-04-12', photo_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150', status: 'Active', created_at: now, updated_at: now },
     ];
 
+    // 3b. Additional realistic employees (25 more, 30 total) — broadened
+    // across the new departments so the Skill Gap Heatmap has real breadth
+    // to visualize instead of just the original 5.
+    const newHires: { first: string; last: string; designation: string; deptId: number }[] = [
+      { first: 'Sarah', last: 'Johnson', designation: 'Senior Backend Engineer', deptId: 1 },
+      { first: 'Michael', last: 'Chen', designation: 'DevOps Engineer', deptId: 11 },
+      { first: 'Vikram', last: 'Nair', designation: 'Cybersecurity Analyst', deptId: 3 },
+      { first: 'Emily', last: 'Watson', designation: 'Frontend Engineer', deptId: 1 },
+      { first: 'Robert', last: 'Wilson', designation: 'Data Engineer', deptId: 2 },
+      { first: 'Jennifer', last: 'Smith', designation: 'Cloud Architect', deptId: 11 },
+      { first: 'Arjun', last: 'Patel', designation: 'Software Engineer', deptId: 1 },
+      { first: 'Sophia', last: 'Brown', designation: 'QA Engineer', deptId: 12 },
+      { first: 'Daniel', last: 'Garcia', designation: 'Database Administrator', deptId: 13 },
+      { first: 'Priya', last: 'Sharma', designation: 'AI Engineer', deptId: 14 },
+      { first: 'Kevin', last: 'Anderson', designation: 'Network Engineer', deptId: 15 },
+      { first: 'Lisa', last: 'Thomas', designation: 'Product Engineer', deptId: 1 },
+      { first: 'Ahmed', last: 'Hassan', designation: 'Security Engineer', deptId: 3 },
+      { first: 'Ethan', last: 'Miller', designation: 'Full Stack Engineer', deptId: 1 },
+      { first: 'Grace', last: 'Lee', designation: 'Machine Learning Engineer', deptId: 14 },
+      { first: 'Olivia', last: 'Martinez', designation: 'Product Manager', deptId: 4 },
+      { first: 'Noah', last: 'Robinson', designation: 'Site Reliability Engineer', deptId: 11 },
+      { first: 'Ava', last: 'Clark', designation: 'UX Designer', deptId: 9 },
+      { first: 'Liam', last: 'Rodriguez', designation: 'Backend Engineer', deptId: 1 },
+      { first: 'Mia', last: 'Lewis', designation: 'Data Analyst', deptId: 2 },
+      { first: 'James', last: 'Walker', designation: 'Network Security Engineer', deptId: 3 },
+      { first: 'Isabella', last: 'Young', designation: 'QA Automation Engineer', deptId: 12 },
+      { first: 'Benjamin', last: 'Hall', designation: 'Database Engineer', deptId: 13 },
+      { first: 'Charlotte', last: 'King', designation: 'NLP Engineer', deptId: 14 },
+      { first: 'Henry', last: 'Wright', designation: 'Infrastructure Engineer', deptId: 15 },
+    ];
+
+    let nextId = 6;
+    const joinDates = ['2023-02-14', '2023-05-22', '2023-09-08', '2024-01-19', '2024-04-30', '2024-08-11', '2024-11-25', '2025-02-17'];
+
+    newHires.forEach((h, idx) => {
+      const id = nextId++;
+      const email = `${h.first.toLowerCase()}.${h.last.toLowerCase()}@okgip.org`;
+      this.users.push({ id, email, password_hash: defaultPassword, role: 'Employee', created_at: now, updated_at: now });
+      this.employees.push({
+        id,
+        user_id: id,
+        first_name: h.first,
+        last_name: h.last,
+        email,
+        phone: `+1-800-555-${String(200 + idx).padStart(4, '0')}`,
+        designation: h.designation,
+        department_id: h.deptId,
+        join_date: joinDates[idx % joinDates.length],
+        photo_url: null,
+        status: 'Active',
+        created_at: now,
+        updated_at: now,
+      });
+    });
+
     // 4. Skills
     this.skills = [
       { id: 1, name: 'React & Frontend Architecture', category: 'Technical', description: 'Advanced SPA state management, hooks, and responsive design systems.', created_at: now, updated_at: now },
@@ -275,18 +341,70 @@ class OKGIPDatabase {
       { id: 4, name: 'SQL & Database Optimization', category: 'Technical', description: 'Relational database schema design, indexing, query optimization, and ORM.', created_at: now, updated_at: now },
       { id: 5, name: 'Cybersecurity & Risk Audit', category: 'Compliance', description: 'SOC2 compliance, OWASP Top 10 mitigation, encryption, and threat modeling.', created_at: now, updated_at: now },
       { id: 6, name: 'Agile Team Leadership', category: 'Leadership', description: 'Scrum facilitation, backlog grooming, velocity tracking, and mentoring.', created_at: now, updated_at: now },
+      { id: 7, name: 'Angular', category: 'Technical', description: 'Component-based frontend framework, RxJS, and dependency injection.', created_at: now, updated_at: now },
+      { id: 8, name: 'Java', category: 'Technical', description: 'Enterprise Java, Spring ecosystem, and JVM performance tuning.', created_at: now, updated_at: now },
+      { id: 9, name: 'Python', category: 'Technical', description: 'Scripting, data processing, and backend service development in Python.', created_at: now, updated_at: now },
+      { id: 10, name: 'Docker', category: 'Technical', description: 'Containerization, image optimization, and Docker Compose orchestration.', created_at: now, updated_at: now },
+      { id: 11, name: 'Kubernetes', category: 'Technical', description: 'Cluster orchestration, deployments, and production container scaling.', created_at: now, updated_at: now },
+      { id: 12, name: 'Azure', category: 'Technical', description: 'Microsoft Azure cloud services, provisioning, and cost management.', created_at: now, updated_at: now },
+      { id: 13, name: 'Machine Learning', category: 'Technical', description: 'Model training, evaluation, and production ML pipeline deployment.', created_at: now, updated_at: now },
+      { id: 14, name: 'Communication', category: 'Soft Skills', description: 'Written and verbal communication, stakeholder updates, and presentations.', created_at: now, updated_at: now },
+      { id: 15, name: 'Project Management', category: 'Leadership', description: 'Planning, resource allocation, timeline tracking, and delivery ownership.', created_at: now, updated_at: now },
     ];
 
-    // 5. Dept Required Skills
+    // 5. Dept Required Skills — every department's expected proficiency
+    // per relevant skill (used to drive the Skill Gap Heatmap).
     this.departmentRequiredSkills = [
-      { id: 1, department_id: 1, skill_id: 1, required_proficiency: 5 },
-      { id: 2, department_id: 1, skill_id: 2, required_proficiency: 5 },
-      { id: 3, department_id: 1, skill_id: 3, required_proficiency: 4 },
-      { id: 4, department_id: 1, skill_id: 4, required_proficiency: 4 },
-      { id: 5, department_id: 2, skill_id: 4, required_proficiency: 5 },
-      { id: 6, department_id: 2, skill_id: 3, required_proficiency: 4 },
-      { id: 7, department_id: 3, skill_id: 5, required_proficiency: 5 },
-      { id: 8, department_id: 3, skill_id: 3, required_proficiency: 4 },
+      { id: 1, department_id: 1, skill_id: 1, required_proficiency: 5 },   // Software Engineering: React
+      { id: 2, department_id: 1, skill_id: 2, required_proficiency: 5 },   // Node.js
+      { id: 3, department_id: 1, skill_id: 3, required_proficiency: 4 },   // Cloud
+      { id: 4, department_id: 1, skill_id: 4, required_proficiency: 4 },   // SQL
+      { id: 5, department_id: 1, skill_id: 10, required_proficiency: 3 },  // Docker
+      { id: 6, department_id: 1, skill_id: 7, required_proficiency: 2 },   // Angular
+      { id: 7, department_id: 2, skill_id: 4, required_proficiency: 5 },   // Data Science & Analytics: SQL
+      { id: 8, department_id: 2, skill_id: 3, required_proficiency: 4 },   // Cloud
+      { id: 9, department_id: 2, skill_id: 9, required_proficiency: 5 },   // Python
+      { id: 10, department_id: 2, skill_id: 13, required_proficiency: 4 }, // Machine Learning
+      { id: 11, department_id: 3, skill_id: 5, required_proficiency: 5 },  // Cybersecurity: Security
+      { id: 12, department_id: 3, skill_id: 3, required_proficiency: 4 },  // Cloud
+      { id: 13, department_id: 3, skill_id: 12, required_proficiency: 3 }, // Azure
+      { id: 14, department_id: 4, skill_id: 6, required_proficiency: 4 },  // Product Management: Leadership
+      { id: 15, department_id: 4, skill_id: 14, required_proficiency: 5 }, // Communication
+      { id: 16, department_id: 4, skill_id: 15, required_proficiency: 5 }, // Project Management
+      { id: 17, department_id: 5, skill_id: 14, required_proficiency: 5 }, // HR: Communication
+      { id: 18, department_id: 5, skill_id: 6, required_proficiency: 3 },  // Leadership
+      { id: 19, department_id: 5, skill_id: 15, required_proficiency: 3 }, // Project Management
+      { id: 20, department_id: 6, skill_id: 14, required_proficiency: 5 }, // Sales & Marketing: Communication
+      { id: 21, department_id: 6, skill_id: 6, required_proficiency: 3 },  // Leadership
+      { id: 22, department_id: 7, skill_id: 4, required_proficiency: 3 },  // Finance: SQL
+      { id: 23, department_id: 7, skill_id: 15, required_proficiency: 3 }, // Project Management
+      { id: 24, department_id: 7, skill_id: 14, required_proficiency: 3 }, // Communication
+      { id: 25, department_id: 8, skill_id: 14, required_proficiency: 5 }, // Customer Success: Communication
+      { id: 26, department_id: 8, skill_id: 15, required_proficiency: 3 }, // Project Management
+      { id: 27, department_id: 9, skill_id: 14, required_proficiency: 4 }, // Design & UX: Communication
+      { id: 28, department_id: 9, skill_id: 15, required_proficiency: 3 }, // Project Management
+      { id: 29, department_id: 9, skill_id: 1, required_proficiency: 3 },  // React
+      { id: 30, department_id: 10, skill_id: 15, required_proficiency: 4 }, // Operations & Legal: Project Management
+      { id: 31, department_id: 10, skill_id: 14, required_proficiency: 4 }, // Communication
+      { id: 32, department_id: 11, skill_id: 3, required_proficiency: 5 },  // Cloud: Cloud Infra
+      { id: 33, department_id: 11, skill_id: 10, required_proficiency: 4 }, // Docker
+      { id: 34, department_id: 11, skill_id: 11, required_proficiency: 5 }, // Kubernetes
+      { id: 35, department_id: 11, skill_id: 12, required_proficiency: 4 }, // Azure
+      { id: 36, department_id: 12, skill_id: 8, required_proficiency: 3 },  // Quality Assurance: Java
+      { id: 37, department_id: 12, skill_id: 9, required_proficiency: 3 },  // Python
+      { id: 38, department_id: 12, skill_id: 14, required_proficiency: 3 }, // Communication
+      { id: 39, department_id: 12, skill_id: 15, required_proficiency: 2 }, // Project Management
+      { id: 40, department_id: 13, skill_id: 4, required_proficiency: 5 },  // Database: SQL
+      { id: 41, department_id: 13, skill_id: 3, required_proficiency: 3 },  // Cloud
+      { id: 42, department_id: 13, skill_id: 9, required_proficiency: 2 },  // Python
+      { id: 43, department_id: 14, skill_id: 13, required_proficiency: 5 }, // AI: Machine Learning
+      { id: 44, department_id: 14, skill_id: 9, required_proficiency: 5 },  // Python
+      { id: 45, department_id: 14, skill_id: 4, required_proficiency: 3 },  // SQL
+      { id: 46, department_id: 15, skill_id: 3, required_proficiency: 4 },  // Infrastructure: Cloud
+      { id: 47, department_id: 15, skill_id: 12, required_proficiency: 4 }, // Azure
+      { id: 48, department_id: 15, skill_id: 11, required_proficiency: 4 }, // Kubernetes
+      { id: 49, department_id: 15, skill_id: 10, required_proficiency: 4 }, // Docker
+      { id: 50, department_id: 15, skill_id: 5, required_proficiency: 3 },  // Security
     ];
 
     // 6. Employee Skills
@@ -298,6 +416,49 @@ class OKGIPDatabase {
       { id: 5, employee_id: 4, skill_id: 4, current_proficiency: 5, assessed_date: '2026-02-15', verified_by: 'David Kumar', created_at: now },
       { id: 6, employee_id: 4, skill_id: 3, current_proficiency: 2, assessed_date: '2026-02-15', verified_by: 'David Kumar', created_at: now },
     ];
+
+    // 6b. Generate proficiency data for the 25 new hires against whatever
+    // skills their own department requires. A small seeded PRNG (not
+    // Math.random) keeps the demo data identical on every server restart,
+    // while still producing realistic spread: most people cluster near
+    // their required level, a minority are well behind (drives the
+    // "Critical Gap" cells), a minority are ahead (drives "Expert" cells).
+    function mulberry32(seed: number) {
+      return function () {
+        seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
+        let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    let empSkillId = this.employeeSkills.length + 1;
+    this.employees
+      .filter(e => e.id >= 6) // only the newly generated hires, leave the original 5 as hand-authored
+      .forEach(emp => {
+        const requirements = this.departmentRequiredSkills.filter(r => r.department_id === emp.department_id);
+        const rand = mulberry32(emp.id * 97 + 13);
+
+        requirements.forEach(req => {
+          const roll = rand();
+          let delta: number;
+          if (roll < 0.08) delta = -3 - Math.floor(rand() * 2);        // ~8%: critical laggard (gap >= 3)
+          else if (roll < 0.30) delta = rand() < 0.65 ? -1 : -2;        // ~22%: moderate gap (mostly -1, some -2)
+          else if (roll < 0.80) delta = 0;                              // ~50%: meets requirement
+          else delta = 1;                                               // ~20%: exceeds requirement
+
+          const current = Math.max(0, Math.min(5, req.required_proficiency + delta));
+          this.employeeSkills.push({
+            id: empSkillId++,
+            employee_id: emp.id,
+            skill_id: req.skill_id,
+            current_proficiency: current,
+            assessed_date: '2026-06-01',
+            verified_by: 'System Assessment',
+            created_at: now,
+          });
+        });
+      });
 
     // 7. Knowledge Gaps
     this.recalculateAllGaps();

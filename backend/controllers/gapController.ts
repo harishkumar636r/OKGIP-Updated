@@ -153,9 +153,10 @@ export const getGapAnalytics = (req: AuthRequest, res: Response) => {
   });
 };
 
-// Task 2 data source: employee x skill severity matrix for the heatmap
-// visualization. Each cell reports the deficit (0 = no gap) and a
-// severity bucket the frontend maps directly to a color.
+// Task 2 data source: employee x skill matrix for the heatmap
+// visualization, with full numeric detail per cell (current, required,
+// deficit) so the frontend tooltip and color gradient can be precise
+// rather than just a 4-bucket severity label.
 export const getGapHeatmap = (req: AuthRequest, res: Response) => {
   db.recalculateAllGaps();
 
@@ -172,36 +173,78 @@ export const getGapHeatmap = (req: AuthRequest, res: Response) => {
 
   const matrix = employees.map(emp => {
     const dept = db.departments.find(d => d.id === emp.department_id);
+    const deptReqs = db.departmentRequiredSkills.filter(r => r.department_id === emp.department_id);
+
+    let scoredCells = 0;
+    let scoreSum = 0;
+
     const cells = skills.map(skill => {
-      const gap = db.knowledgeGaps.find(g => g.employee_id === emp.id && g.skill_id === skill.id);
-      const deficit = gap ? gap.gap_score : 0;
-      let severity: 'none' | 'low' | 'medium' | 'high' = 'none';
-      if (deficit >= 2) severity = 'high';
-      else if (deficit === 1) severity = 'medium';
-      else if (gap) severity = 'low';
+      const requirement = deptReqs.find(r => r.skill_id === skill.id);
+      const applicable = !!requirement;
+      const empSkill = db.employeeSkills.find(es => es.employee_id === emp.id && es.skill_id === skill.id);
+      const current = empSkill ? empSkill.current_proficiency : 0;
+      const required = requirement ? requirement.required_proficiency : 0;
+      const deficit = applicable ? Math.max(0, required - current) : 0;
+
+      if (applicable) {
+        scoredCells++;
+        scoreSum += Math.min(1, current / Math.max(1, required));
+      }
+
+      let severity: 'none' | 'low' | 'medium' | 'high' | 'expert' | 'na' = 'na';
+      if (applicable) {
+        if (deficit >= 3) severity = 'high';
+        else if (deficit === 2) severity = 'high';
+        else if (deficit === 1) severity = 'medium';
+        else if (current > required) severity = 'expert';
+        else severity = 'none';
+      }
 
       return {
         skillId: skill.id,
         skillName: skill.name,
+        current,
+        required,
         deficit,
+        applicable,
         severity,
-        status: gap ? gap.status : 'Resolved',
       };
     });
+
+    const overallScore = scoredCells > 0 ? Math.round((scoreSum / scoredCells) * 100) : 100;
 
     return {
       employeeId: emp.id,
       employeeName: `${emp.first_name} ${emp.last_name}`,
+      designation: emp.designation,
+      departmentId: emp.department_id,
       departmentName: dept ? dept.name : 'Unassigned',
+      overallScore,
       cells,
     };
   });
+
+  const criticalCells = matrix.flatMap(r => r.cells).filter(c => c.applicable && c.deficit >= 2).length;
+  const moderateCells = matrix.flatMap(r => r.cells).filter(c => c.applicable && c.deficit === 1).length;
+  const onTargetOrBetter = matrix.flatMap(r => r.cells).filter(c => c.applicable && c.deficit === 0).length;
+  const totalApplicableCells = matrix.flatMap(r => r.cells).filter(c => c.applicable).length;
+  const workforceCoverage = totalApplicableCells > 0
+    ? Math.round((onTargetOrBetter / totalApplicableCells) * 100)
+    : 100;
 
   return res.json({
     success: true,
     data: {
       skills: skills.map(s => ({ id: s.id, name: s.name, category: s.category })),
       employees: matrix,
+      summary: {
+        totalEmployees: employees.length,
+        totalDepartments: db.departments.length,
+        totalSkills: skills.length,
+        criticalGaps: criticalCells,
+        moderateGaps: moderateCells,
+        workforceCoverage,
+      },
     },
   });
 };
